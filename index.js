@@ -12,11 +12,35 @@ I need this code, but don't know where, perhaps should make some middleware, don
 
 Go code!
 */
+const http = require('http'); 
 const express = require("express");
-const server = require("./server")
 
+const morgan = require("morgan");
+const helmet = require("helmet")
+
+const actionRouter = require("./data/routers/actionRouter.js");
+const projectRouter = require("./data/routers/projectRouter.js");
+
+const server = express();
 
 server.use(express.json());
+server.use(morgan('dev'))
+server.use(helmet());
+
+server.use('/actionRouter', actionRouter)
+server.use('/projectRouter', projectRouter)
+
+
+console.log('test')
+
+server.use(express.json());
+
+
+const hostname = 'localhost'; 
+const port = 8000; 
+
+server.use("/data", [morgan("short"), actionRouter, projectRouter] );
+
 
 server.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
