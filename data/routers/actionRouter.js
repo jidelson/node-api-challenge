@@ -1,6 +1,6 @@
 const express = require('express');
 
-const Hubs = require('../db.js');
+const Hubs = require('../seeds/02-actions.js');
 
 const router = express();
 
@@ -21,13 +21,13 @@ router.get("/", (req, res) => {
 router.get("/:id", (req, res) => {
     const id = req.params.id
 
-    const action = actions.find(p => p.id === id)
+    const action = actions.find(a => a.id === id)
 
     if(!action.id){
         res.status(404).json({ message: "The action with the specified ID does not exist." })
     }
     else{
-        Hubs.getProjectActions(req.body)
+        Hubs.get(req.body)
         .then(hub => {
             res.status(201).json(action)
         })
