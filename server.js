@@ -10,7 +10,7 @@ const server = express();
 
 server.use(express.json());
 server.use(morgan('dev'))
-
+server.use(helmet());
 
 
 const hostname = 'localhost'; 
