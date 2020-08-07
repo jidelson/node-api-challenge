@@ -1,6 +1,6 @@
 const express = require('express');
 
-const Hubs = require('../seeds/01-projects.js');
+const Hubs = require('../helpers/projectModel.js');
 
 const router = express();
 

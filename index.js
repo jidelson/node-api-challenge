@@ -24,6 +24,7 @@ const projectRouter = require("./data/routers/projectRouter.js");
 const server = express();
 
 server.use(express.json());
+
 server.use(morgan('dev'))
 server.use(helmet());
 
@@ -32,15 +33,16 @@ server.use('/projectRouter', projectRouter)
 
 
 console.log('test')
-
-server.use(express.json());
-
-
-const hostname = 'localhost'; 
-const port = 8000; 
+server.get('/', (req, res) => {
+  res.send(`
+    <h2>Welcome to the Node API Challenge!!!</h2>
+  `);
+});
 
 server.use("/data", [morgan("short"), actionRouter, projectRouter] );
 
+const hostname = 'localhost'; 
+const port = 8000; 
 
 server.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);

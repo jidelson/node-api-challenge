@@ -1,6 +1,6 @@
 const express = require('express');
 
-const Hubs = require('../seeds/02-actions.js');
+const Hubs = require('../helpers/actionModel.js');
 
 const router = express();
 
