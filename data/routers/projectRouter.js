@@ -1,129 +1,96 @@
 const express = require('express');
-
-const Hubs = require('../helpers/projectModel.js');
-
-const router = express();
+const router = express.Router();
+const ProjectHubs = require('../helpers/projectModel.js');
 
 // GET
 router.get("/", (req, res) => {
-    if(!projects){
-        res.status(500).json({ error: "The projects information could not be retrieved." })
-    }
-    else{
-        Hubs.get(req.body)
-        .then(hub => {
-            res.status(201).json(projects)
-        })
-    }
-})
+    ProjectHubs.get()
+    .then((projects) => {
+        res.status(200).json({ projects })
+    })
+    .catch((err) => {
+        res.status(500).json({ error: 'The projects information could not be retreived.'})
+    })
+});
 
 //GET BY ID
-router.get("/:id", (req, res) => {
-    const id = req.params.id
+router.get("/:id", checkProjectId, (req, res) => {
+    const {id} = req.params;
 
-    const project = projects.find(p => p.id === id)
-
-    if(!project.id){
-        res.status(404).json({ message: "The project with the specified ID does not exist." })
-    }
-    else{
-        Hubs.getProjectActions(req.body)
-        .then(hub => {
-            res.status(201).json(action)
+    try{
+        ProjectHubs.get(req.project).then((project) => {
+            res.status(200).json({ project })
         })
-        .catch(error => {
-            console.log(error);
-            res.status(500).json({ error: "The project information could not be retrieved." })
-        })
+    } catch {
+        res.status(500).json({ errorMessage: "Not able to retreive project"})
     }
 })
 
 // POST
 router.post("/", (req, res) => {
-    const project = req.body
-
-    if (!project.project_id || !project.description || !project.notes) {
-        res.status(400).json({ errorMessage: "Please provide title and notes for the project." })
-    }
-    else {
-        Hubs.insert(req.body)
-        .then(hub => {
-            res.status(201).json(hub);
+    try{
+        ProjectHubs.insert(req.body).then((project) => {
+            res.status(201).json({ newProject: project })
         })
-        .catch(error => {
-            console.log(error);
-            res.status(500).json({
-                message: 'Error adding the hub'
-            })
-        })
+    } catch {
+        res.status(500).json({ errorMessage: "Can not add the project" })
     }
-})
-
-// POST BY ID
-router.post("/:id", (req, res) => {
-    const project = req.body
-
-    const id = req.params.id
-
-    if(!project.id){
-        res.status(404).json({ message: "The project with the specified ID does not exist." })
-    }
-    else{
-        Hubs.add(req.body)
-        .then(hub => {
-            project.insert(project)
-            res.status(201).json(project)
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).json({
-                error: "There was an error while saving the project to the database" 
-            })
-        })
-    }
-})
+});
 
 // DELETE
-router.delete("/:id", (req, res) => {
+router.delete("/:id", checkProjectId, (req, res) => {
     
-    const id = req.params.id
+    const {id} = req.params;
 
-    const deletedProject = projects.remove(p => p.id === id)
-    if(deletedProject.length > 0) {
-        projects = projects.filter(p => p.id !== id)
-        res.status(200).json(deletedProject)
-    } else {
-        Hubs.remove(req.body)
-        .then(hub => {
-            res.status(404).json({ message: "The project with the specified ID does not exist." })
-        })
-        .catch(
-            res.status(500).json({ error: "The project could not be removed" })
-        )}
+    try{
+        ProjectHubs.remove(req.project).then((deletedProject) => {
+            res.status(200).json({ deleted: deletedProject})
+        });
+    } catch {
+        res.status(500).json({ errorMessage: "Project was not deleted"})
+    }
 })
 
 // PUT
 router.put("/:id", (req, res) => {
-    
-    const id = req.params.id
-    const project = projects.find(p => p.id === id)
-    const newProject = req.body
-
-    if(!project){
-        req.status(404).json({ message: "The project with the specified ID does not exist." })
-    }
-
-    else{
-        Hubs.update(req.body)
-        .then(hub => {
-            projects = projects.map(project => project.id === req.params.id ? newProject : project)
-        res.status(200).json(projects)
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).json({ error: "The project information could not be modified." })
+    const {id} = req.params;
+    try{
+        ProjectHubs.update(id, req.body).then((updatedProject) => {
+            res.status(200).json({updatedProject});
+        });
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({
+            err,
+            errorMessage: "Could not edit the project for the provided id"
         })
     }
 })
+
+// MIDDLEWARE
+function checkProjectId(req, res, next){
+    const projectId = req.params.id;
+
+    ProjectHubs.get(projectId)
+    .then((project) => {
+        if(project === null){
+            res.status(400).json({ errorMessage: 'The id is not valid'})
+        } else {
+            req.project = projectId;
+            next();
+        }
+    })
+    .catch((err) => res.status(400).json({ errorMessage: 'The id is not valid'}))
+}
+
+function checkProject(req, res, next){
+    const projectRequirement = req.body;
+
+    if (!projectRequirement.name || !projectRequirement.description){
+        res.status(400).json({ message: "Enter a description and notes"})
+    } else {
+        next();
+    }
+}
 
 module.exports = router;

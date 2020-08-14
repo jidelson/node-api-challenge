@@ -1,41 +1,31 @@
 const express = require('express');
-
-const Hubs = require('../helpers/actionModel.js');
-
-const router = express();
+const router = express.Router();
+const ActionHubs = require('../helpers/actionModel.js');
+const ProjectHubs = require('../helpers/projectModel.js');
 
 // GET
 router.get("/", (req, res) => {
-    if(!actions){
-        res.status(500).json({ error: "The actions information could not be retrieved." })
-    }
-    else{
-        Hubs.get(req.body)
-        .then(hub => {
-            res.status(201).json(actions)
-        })
-    }
-})
+   try{
+        ActionHubs.get()
+            .then((actions) => {
+            res.status(200).json({actions});
+            });
+    } catch {
+    res.status(500).json({ errorMessage: 'Can not retreive action'})
+    }}
+)
 
 //GET BY ID
-router.get("/:id", (req, res) => {
-    const id = req.params.id
+router.get("/:id", checkActionId, (req, res) => {
+   const { id } = req.params;
 
-    const action = actions.find(a => a.id === id)
-
-    if(!action.id){
-        res.status(404).json({ message: "The action with the specified ID does not exist." })
-    }
-    else{
-        Hubs.get(req.body)
-        .then(hub => {
-            res.status(201).json(action)
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).json({ error: "The action information could not be retrieved." })
-        })
-    }
+  try{
+      ActionHubs.get(req.action).then((action) =>{
+          res.status(200).json({ action })
+      })
+  } catch {
+      res.status(500).json({ errorMessage: "Not able to retreive action" })
+  }
 })
 
 // POST
@@ -43,10 +33,10 @@ router.post("/", (req, res) => {
     const action = req.body
 
     if (!action.project_id || !action.description || !action.notes) {
-        res.status(400).json({ errorMessage: "Please provide title and notes for the action." })
+        res.status(400).json({ errorMessage: "Please provide description and notes for the action." })
     }
     else {
-        Hubs.insert(req.body)
+        ActionHubs.insert(req.body)
         .then(hub => {
             res.status(201).json(hub);
         })
@@ -59,71 +49,57 @@ router.post("/", (req, res) => {
     }
 })
 
-// POST BY ID
-router.post("/:id", (req, res) => {
-    const action = req.body
-
-    const id = req.params.id
-
-    if(!action.id){
-        res.status(404).json({ message: "The action with the specified ID does not exist." })
-    }
-    else{
-        Hubs.add(req.body)
-        .then(hub => {
-            action.insert(action)
-            res.status(201).json(action)
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).json({
-                error: "There was an error while saving the action to the database" 
-            })
-        })
-    }
-})
-
 // DELETE
-router.delete("/:id", (req, res) => {
-    
-    const id = req.params.id
-
-    const deletedAction = actions.remove(a => a.id === id)
-    if(deletedAction.length > 0) {
-        actions = actions.filter(a => a.id !== id)
-        res.status(200).json(deletedAction)
-    } else {
-        Hubs.remove(req.body)
-        .then(hub => {
-            res.status(404).json({ message: "The action with the specified ID does not exist." })
-        })
-        .catch(
-            res.status(500).json({ error: "The action could not be removed" })
-        )}
-})
+router.delete("/:id", checkActionId, (req, res) => {
+    try{
+        ActionHubs.remove(req.action).then((deletedAction) => {
+            res.status(200).json({ deleted: deletedAction})
+        });
+    } catch {
+        res.status(500).json({ errorMessage: "Action was not deleted"})
+    }
+});
 
 // PUT
-router.put("/:id", (req, res) => {
-    
-    const id = req.params.id
-    const action = actions.find(p => p.id === id)
-    const newAction = req.body
-
-    if(!action){
-        req.status(404).json({ message: "The action with the specified ID does not exist." })
-    }
-
-    else{
-        Hubs.update(req.body)
-        .then(hub => {
-            actions = actions.map(action => action.id === req.params.id ? newAction : action)
-        res.status(200).json(actions)
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).json({ error: "The action information could not be modified." })
-        })
-    }
+router.put("/:id", checkActionId, checkAction, (req, res) => {
+    const {id} = req.params;
+    try {
+        ActionHubs.update(id, req.body).then((updatedAction) => {
+          res.status(200).json({ updatedAction });
+        });
+      } catch (err) {
+          console.log(err)
+        res.status(500).json({
+            err,
+          errorMessage: "Could not edit the action for the provided project id",
+        });
+      }
 })
+
+// MIDDLEWARE
+function checkActionId(req, res, next){
+    const actionId = req.params.id;
+
+    ActionHubs.get(actionId)
+    .then((action) => {
+        if(action === null){
+            res.status(400).json({ errorMessage: 'The id is not valid'})
+        } else {
+            req.action = action;
+            next();
+        }
+    })
+    .catch((err) => res.status(400).json({ errorMessage: 'The id is not valid'}))
+}
+
+function checkAction(req, res, next){
+    const actionRequirement = req.body;
+
+    if (!actionRequirement.description || !actionRequirement.notes){
+        res.status(400).json({ message: "Enter a description and notes"})
+    } else {
+        next();
+    }
+}
 
 module.exports = router;

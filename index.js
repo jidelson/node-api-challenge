@@ -12,38 +12,17 @@ I need this code, but don't know where, perhaps should make some middleware, don
 
 Go code!
 */
-const http = require('http'); 
-const express = require("express");
+const server = require("./server.js");
 
-const morgan = require("morgan");
-const helmet = require("helmet")
-
-const actionRouter = require("./data/routers/actionRouter.js");
-const projectRouter = require("./data/routers/projectRouter.js");
-
-const server = express();
-
-server.use(express.json());
-
-server.use(morgan('dev'))
-server.use(helmet());
-
-server.use('/actionRouter', actionRouter)
-server.use('/projectRouter', projectRouter)
+const PORT = process.env.PORT || 8000;
 
 
-console.log('test')
-server.get('/', (req, res) => {
-  res.send(`
-    <h2>Welcome to the Node API Challenge!!!</h2>
-  `);
+// server.use(morgan('dev'))
+// server.use(helmet());
+
+
+
+server.listen(PORT, () => {
+  console.log(`\n== API running on port ${PORT} ==\n`);
 });
 
-server.use("/data", [morgan("short"), actionRouter, projectRouter] );
-
-const hostname = 'localhost'; 
-const port = 8000; 
-
-server.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
-  });
