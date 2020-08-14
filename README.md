@@ -40,13 +40,23 @@ Demonstrate your understanding of this Sprint's concepts by answering the follow
 
 -   [ ] Mention two parts of Express that you learned about this week.
 
+    I learned that there are different types of express middleware. I wrote custom express middleware for this challenge.I also learned this week about third-party middleware such as morgan and helmet. It was interesting to learn about custom middleware because it gives us as developers a lot of control to write a certain task that is needed. 
+
 -   [ ] Describe Middleware?
+
+Middleware is anything you put in the middle of one layer of the software and another. In the case of Express Middleware it is functions that execute during the lifecycle of a request to an Express server.
 
 -   [ ] Describe a Resource?
 
+When we are desiging a RESTful Web API everything is a resource, and each resource is accessible via a unique URL and can have multiple representations. Every interaction with the resource should happen through the URL identifier we gave to it.
+
 -   [ ] What can the API return to help clients know if a request was successful?
 
+The API can return a status code, for example, 200 and also the API could return a validation message if the request was successful.
+
 -   [ ] How can we partition our application into sub-applications?
+
+We can make our application into sub-applications by using routers. This makes our application more modular and easier to maintain.
 
 ## Minimum Viable Product
 
